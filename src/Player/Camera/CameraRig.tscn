@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://src/Player/Camera/ShakingCamera.gd" type="Script" id=1]
+[ext_resource path="res://src/Player/Camera/CameraRig.gd" type="Script" id=2]
+
+[node name="CameraRig" type="Position2D"]
+script = ExtResource( 2 )
+
+[node name="ShakingCamera" type="Camera2D" parent="."]
+current = true
+smoothing_enabled = true
+script = ExtResource( 1 )
+amplitude = 8.0
+default_smoothing_speed = {
+"gamepad": 1,
+"mouse": 3
+}
+duration = 0.8
+
+[node name="Timer" type="Timer" parent="ShakingCamera"]
+wait_time = 0.8

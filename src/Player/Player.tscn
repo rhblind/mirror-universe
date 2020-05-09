@@ -1,0 +1,146 @@
+[gd_scene load_steps=22 format=2]
+
+[ext_resource path="res://src/Player/Player.gd" type="Script" id=1]
+[ext_resource path="res://src/Player/Skin.tscn" type="PackedScene" id=2]
+[ext_resource path="res://src/Player/FloorDetector.tscn" type="PackedScene" id=3]
+[ext_resource path="res://src/Player/Camera/CameraRig.tscn" type="PackedScene" id=4]
+[ext_resource path="res://src/Player/Camera/CameraAnchorDetector.tscn" type="PackedScene" id=5]
+[ext_resource path="res://src/Main/StateMachine/StateMachine.gd" type="Script" id=6]
+[ext_resource path="res://src/Player/States/Idle.gd" type="Script" id=7]
+[ext_resource path="res://src/Player/States/Move.gd" type="Script" id=8]
+[ext_resource path="res://src/Player/States/Air.gd" type="Script" id=9]
+[ext_resource path="res://src/Player/States/Run.gd" type="Script" id=10]
+[ext_resource path="res://src/Player/States/Wall.gd" type="Script" id=11]
+[ext_resource path="res://src/Player/States/Ledge.gd" type="Script" id=12]
+[ext_resource path="res://src/Player/States/Stagger.gd" type="Script" id=13]
+[ext_resource path="res://src/Player/States/Spawn.gd" type="Script" id=14]
+[ext_resource path="res://src/Player/PassThrough.tscn" type="PackedScene" id=15]
+[ext_resource path="res://src/Player/LedgeWallDetector.tscn" type="PackedScene" id=16]
+[ext_resource path="res://src/Player/States/Debug.gd" type="Script" id=17]
+[ext_resource path="res://src/Player/States/Die.gd" type="Script" id=18]
+[ext_resource path="res://src/Combat/HitBox/HitBox.tscn" type="PackedScene" id=19]
+[ext_resource path="res://src/Combat/Stats.tscn" type="PackedScene" id=20]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 44, 46 )
+
+[node name="Player" type="KinematicBody2D"]
+collision_layer = 2
+collision_mask = 17
+script = ExtResource( 1 )
+
+[node name="Skin" parent="." instance=ExtResource( 2 )]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+modulate = Color( 0, 0, 0, 1 )
+position = Vector2( 0, -46 )
+shape = SubResource( 1 )
+
+[node name="LedgeWallDetector" parent="." instance=ExtResource( 16 )]
+
+[node name="RayTop" parent="LedgeWallDetector" index="0"]
+position = Vector2( 36, -35 )
+
+[node name="RayBottom" parent="LedgeWallDetector" index="1"]
+position = Vector2( 36, 0 )
+
+[node name="FloorDetector2" parent="." instance=ExtResource( 3 )]
+position = Vector2( 0, 0 )
+
+[node name="PassThrough" parent="." instance=ExtResource( 15 )]
+
+[node name="CameraAnchorDetector" parent="." instance=ExtResource( 5 )]
+position = Vector2( 0, -46 )
+
+[node name="CameraPosition" parent="CameraAnchorDetector" index="1"]
+remote_path = NodePath("../../CameraRig")
+
+[node name="CameraRig" parent="." instance=ExtResource( 4 )]
+position = Vector2( 0, -46 )
+
+[node name="ShakingCamera" parent="CameraRig" index="0"]
+default_smoothing_speed = {
+"gamepad": 1,
+"mouse": 3
+}
+
+[node name="StateMachine" type="Node" parent="."]
+script = ExtResource( 6 )
+
+[node name="Move" type="Node" parent="StateMachine"]
+script = ExtResource( 8 )
+
+[node name="Idle" type="Node" parent="StateMachine/Move"]
+script = ExtResource( 7 )
+
+[node name="JumpDelay" type="Timer" parent="StateMachine/Move/Idle"]
+one_shot = true
+
+[node name="Run" type="Node" parent="StateMachine/Move"]
+script = ExtResource( 10 )
+
+[node name="SlowStarter" type="Timer" parent="StateMachine/Move/Run"]
+wait_time = 0.7
+one_shot = true
+
+[node name="Tween" type="Tween" parent="StateMachine/Move/Run"]
+
+[node name="Air" type="Node" parent="StateMachine/Move"]
+script = ExtResource( 9 )
+
+[node name="JumpDelay" type="Timer" parent="StateMachine/Move/Air"]
+wait_time = 0.1
+one_shot = true
+
+[node name="ControlsFreeze" type="Timer" parent="StateMachine/Move/Air"]
+wait_time = 0.16
+one_shot = true
+
+[node name="Wall" type="Node" parent="StateMachine/Move"]
+script = ExtResource( 11 )
+slide_acceleration = 1600.0
+max_slide_speed = 400.0
+friction_factor = 0.15
+jump_strength = Vector2( 500, 400 )
+
+[node name="Ledge" type="Node" parent="StateMachine"]
+script = ExtResource( 12 )
+
+[node name="Spawn" type="Node" parent="StateMachine"]
+script = ExtResource( 14 )
+
+[node name="Debug" type="Node" parent="StateMachine"]
+script = ExtResource( 17 )
+
+[node name="Stagger" type="Node" parent="StateMachine"]
+script = ExtResource( 13 )
+
+[node name="Duration" type="Timer" parent="StateMachine/Stagger"]
+one_shot = true
+
+[node name="Die" type="Node" parent="StateMachine"]
+script = ExtResource( 18 )
+
+[node name="Stats" parent="." instance=ExtResource( 20 )]
+
+[node name="HitBox" parent="." instance=ExtResource( 19 )]
+position = Vector2( 0, -32 )
+monitorable = false
+collision_layer = 2048
+collision_mask = 1024
+
+[node name="CollisionShape2D" parent="HitBox" index="0"]
+modulate = Color( 0.0235294, 0.0352941, 0.807843, 1 )
+position = Vector2( 0, -14 )
+
+[editable path="Skin"]
+
+[editable path="LedgeWallDetector"]
+
+[editable path="PassThrough"]
+
+[editable path="CameraAnchorDetector"]
+
+[editable path="CameraRig"]
+
+[editable path="HitBox"]
